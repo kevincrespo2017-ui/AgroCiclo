@@ -1,0 +1,2393 @@
+openapi: 3.0.3
+info:
+  title: AgroCiclo API REST
+  version: 2.0.0
+  description: Caso 09. Inicia sesión, copia el token de la respuesta y úsalo en Authorize
+    sin escribir el prefijo Bearer.
+servers:
+- url: /api
+security:
+- sesionBearer: []
+paths:
+  /salud:
+    get:
+      tags:
+      - Sistema
+      summary: Comprobar API y conexión PostgreSQL
+      security: []
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - estado
+                - base_de_datos
+                properties:
+                  estado:
+                    type: string
+                  base_de_datos:
+                    type: string
+        '503':
+          $ref: '#/components/responses/HTTP503'
+  /openapi.json:
+    get:
+      tags:
+      - Sistema
+      summary: Obtener la especificación OpenAPI
+      security: []
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                type: object
+  /auth/login:
+    post:
+      tags:
+      - Sesión
+      summary: Iniciar sesión
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sesion'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+        '429':
+          $ref: '#/components/responses/HTTP429'
+  /auth/me:
+    get:
+      tags:
+      - Sesión
+      summary: Obtener el perfil actual
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usuario'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+  /auth/logout:
+    post:
+      tags:
+      - Sesión
+      summary: Revocar la sesión actual
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+  /terrenos:
+    get:
+      tags:
+      - Catálogos
+      summary: Listar terrenos
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Terreno'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+    post:
+      tags:
+      - Catálogos
+      summary: Registrar terreno (administrador o supervisor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TerrenoEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terreno'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /terrenos/{id}:
+    put:
+      tags:
+      - Catálogos
+      summary: Editar terreno (administrador o supervisor)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TerrenoEntrada'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terreno'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    delete:
+      tags:
+      - Catálogos
+      summary: Eliminar terreno sin vínculos (administrador)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /cultivos:
+    get:
+      tags:
+      - Catálogos
+      summary: Listar cultivos
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cultivo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+    post:
+      tags:
+      - Catálogos
+      summary: Registrar cultivo (administrador o supervisor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CultivoEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cultivo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /cultivos/{id}:
+    put:
+      tags:
+      - Catálogos
+      summary: Editar cultivo (administrador o supervisor)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CultivoEntrada'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cultivo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    delete:
+      tags:
+      - Catálogos
+      summary: Eliminar cultivo sin vínculos (administrador)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /insumos:
+    get:
+      tags:
+      - Catálogos
+      summary: Listar insumos
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Insumo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+    post:
+      tags:
+      - Catálogos
+      summary: Registrar insumo (administrador o supervisor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsumoEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Insumo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /insumos/{id}:
+    put:
+      tags:
+      - Catálogos
+      summary: Editar insumo (administrador o supervisor)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsumoEntrada'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Insumo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    delete:
+      tags:
+      - Catálogos
+      summary: Eliminar insumo sin vínculos (administrador)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos:
+    get:
+      tags:
+      - Ciclos
+      summary: Buscar, filtrar y paginar ciclos
+      parameters:
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: tam
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: Busca por código, terreno o cultivo.
+      - name: estado
+        in: query
+        schema:
+          type: string
+          enum:
+          - PLANIFICADO
+          - SEMBRADO
+          - CERRADO
+      - name: cultivoId
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: terrenoId
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Inicio de ciclo desde esta fecha.
+      - name: hasta
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ordenar
+        in: query
+        schema:
+          type: string
+          enum:
+          - fechaInicio
+          - codigo
+          - rendimiento
+          - costo
+          default: fechaInicio
+      - name: direccion
+        in: query
+        schema:
+          type: string
+          enum:
+          - asc
+          - desc
+          default: desc
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaCicloResumen'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    post:
+      tags:
+      - Ciclos
+      summary: Planificar un ciclo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CicloEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ciclo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}:
+    get:
+      tags:
+      - Ciclos
+      summary: Ver ciclo, actividades, consumos y cosechas
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CicloDetalle'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    put:
+      tags:
+      - Ciclos
+      summary: Editar un ciclo planificado
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CicloEntrada'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ciclo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    delete:
+      tags:
+      - Ciclos
+      summary: Retirar un ciclo planificado sin registros (administrador)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/sembrar:
+    post:
+      tags:
+      - Ciclos
+      summary: Confirmar la siembra
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fecha'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ciclo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/cerrar:
+    post:
+      tags:
+      - Ciclos
+      summary: Cerrar el ciclo (administrador o supervisor)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Fecha'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ciclo'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/actividades:
+    post:
+      tags:
+      - Operaciones
+      summary: Programar una actividad
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActividadEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actividad'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/actividades/{actividadId}:
+    put:
+      tags:
+      - Operaciones
+      summary: Editar una actividad pendiente
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      - name: actividadId
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActividadEntrada'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actividad'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+    delete:
+      tags:
+      - Operaciones
+      summary: Retirar una actividad pendiente (administrador)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      - name: actividadId
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/actividades/{actividadId}/completar:
+    post:
+      tags:
+      - Operaciones
+      summary: Registrar ejecución y costo
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      - name: actividadId
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompletarActividad'
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actividad'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/cosechas:
+    post:
+      tags:
+      - Operaciones
+      summary: Registrar cosecha en kg para un ciclo sembrado
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CosechaEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cosecha'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/cosechas/{cosechaId}:
+    delete:
+      tags:
+      - Operaciones
+      summary: Retirar una cosecha de un ciclo abierto (administrador)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      - name: cosechaId
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '204':
+          description: Operación completada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /ciclos/{id}/consumos:
+    post:
+      tags:
+      - Operaciones
+      summary: Registrar aplicación de insumo y descontar stock
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConsumoEntrada'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovimientoRegistrado'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /insumos/{id}/entradas:
+    post:
+      tags:
+      - Operaciones
+      summary: Ingresar stock (administrador o supervisor)
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsumoMovimiento'
+      responses:
+        '201':
+          description: Registro creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovimientoRegistrado'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '409':
+          $ref: '#/components/responses/HTTP409'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /insumos/{id}/movimientos:
+    get:
+      tags:
+      - Operaciones
+      summary: Consultar el historial de stock
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: tam
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaMovimiento'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /reportes/indicadores:
+    get:
+      tags:
+      - Productividad
+      summary: Ver productividad por cultivo e indicadores generales
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Indicadores'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+  /reportes/ciclos:
+    get:
+      tags:
+      - Productividad
+      summary: Consultar ciclos y sus indicadores para comparar
+      parameters:
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: tam
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+      - name: q
+        in: query
+        schema:
+          type: string
+          maxLength: 100
+        description: Busca por código, terreno o cultivo.
+      - name: estado
+        in: query
+        schema:
+          type: string
+          enum:
+          - PLANIFICADO
+          - SEMBRADO
+          - CERRADO
+      - name: cultivoId
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: terrenoId
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+        description: Inicio de ciclo desde esta fecha.
+      - name: hasta
+        in: query
+        schema:
+          type: string
+          format: date
+      - name: ordenar
+        in: query
+        schema:
+          type: string
+          enum:
+          - fechaInicio
+          - codigo
+          - rendimiento
+          - costo
+          default: fechaInicio
+      - name: direccion
+        in: query
+        schema:
+          type: string
+          enum:
+          - asc
+          - desc
+          default: desc
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaCicloResumen'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /reportes/ciclos/{id}/pdf:
+    get:
+      tags:
+      - Productividad
+      summary: Descargar ficha del ciclo
+      parameters:
+      - name: id
+        in: path
+        schema:
+          type: integer
+          minimum: 1
+        required: true
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /alertas:
+    get:
+      tags:
+      - Productividad
+      summary: Consultar alertas vivas de campo e inventario
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Alerta'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+  /terrenos/{id}/imagen:
+    post:
+      tags:
+      - Terrenos
+      summary: Subir o reemplazar la fotografía de un terreno
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [archivo]
+              properties:
+                archivo:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Terreno actualizado con la nueva fotografía
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /reportes/general.pdf:
+    get:
+      tags:
+      - Reportes
+      summary: Descargar un reporte PDF consolidado
+      parameters:
+      - name: tipo
+        in: query
+        required: true
+        schema:
+          type: string
+          enum: [produccion, terrenos, insumos, actividades]
+      responses:
+        '200':
+          description: Documento PDF generado
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /auditoria:
+    get:
+      tags:
+      - Auditoría
+      summary: Consultar bitácora paginada (administrador)
+      parameters:
+      - name: pagina
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+      - name: tam
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+      - name: q
+        in: query
+        schema:
+          type: string
+        description: Busca entidad, acción o usuario.
+      - name: desde
+        in: query
+        schema:
+          type: string
+          format: date
+      responses:
+        '200':
+          description: Solicitud atendida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginaAuditoria'
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+  /auth/registro:
+    post:
+      tags:
+      - Autenticación
+      summary: Registrar cuenta operativa y enviar código de cuatro dígitos
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - nombre
+              - email
+              - password
+              properties:
+                nombre:
+                  type: string
+                  maxLength: 100
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 72
+      responses:
+        '200':
+          description: Solicitud procesada
+        '400':
+          description: Enlace inválido, vencido o utilizado
+        '422':
+          description: Datos inválidos
+        '429':
+          description: Límite de solicitudes
+        '503':
+          description: Correo o base de datos no disponible
+  /auth/recuperar:
+    post:
+      tags:
+      - Autenticación
+      summary: Recuperar cuenta
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Solicitud procesada
+        '400':
+          description: Enlace inválido, vencido o utilizado
+        '422':
+          description: Datos inválidos
+        '429':
+          description: Límite de solicitudes
+        '503':
+          description: Correo o base de datos no disponible
+  /auth/reenviar:
+    post:
+      tags:
+      - Autenticación
+      summary: Reenviar código de verificación
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Solicitud procesada
+        '400':
+          description: Enlace inválido, vencido o utilizado
+        '422':
+          description: Datos inválidos
+        '429':
+          description: Límite de solicitudes
+        '503':
+          description: Correo o base de datos no disponible
+  /auth/verificar:
+    post:
+      tags:
+      - Autenticación
+      summary: Verificar correo con código de cuatro dígitos
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - email
+              - codigo
+              properties:
+                email:
+                  type: string
+                  format: email
+                codigo:
+                  type: string
+                  pattern: ^[0-9]{4}$
+      responses:
+        '200':
+          description: Correo verificado; la cuenta queda pendiente de aprobación
+        '400':
+          description: Código inválido, vencido o utilizado
+        '422':
+          description: Datos inválidos
+        '429':
+          description: Límite de solicitudes
+        '503':
+          description: Correo o base de datos no disponible
+  /auth/restablecer:
+    post:
+      tags:
+      - Autenticación
+      summary: Restablecer cuenta
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required:
+              - token
+              - password
+              properties:
+                token:
+                  type: string
+                  pattern: ^[0-9a-f]{64}$
+                password:
+                  type: string
+                  minLength: 8
+                  maxLength: 72
+      responses:
+        '200':
+          description: Solicitud procesada
+        '400':
+          description: Enlace inválido, vencido o utilizado
+        '422':
+          description: Datos inválidos
+        '429':
+          description: Límite de solicitudes
+        '503':
+          description: Correo o base de datos no disponible
+  /usuarios:
+    get:
+      tags:
+      - Administración
+      summary: Listar cuentas operativas y sus estados (administrador)
+      responses:
+        '200':
+          description: Solicitudes de acceso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: integer }
+                    nombre: { type: string }
+                    email: { type: string, format: email }
+                    verificado: { type: boolean }
+                    estado_aprobacion: { type: string, enum: [PENDIENTE, APROBADO, RECHAZADO] }
+                    verificacion_manual: { type: boolean }
+                    motivo_rechazo: { type: string, nullable: true }
+                    creado_en: { type: string, format: date-time }
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+  /usuarios/{id}/aprobar:
+    patch:
+      tags:
+      - Administración
+      summary: Aprobar cuenta incluso si el código de correo no pudo entregarse
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Cuenta aprobada y activada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+  /usuarios/{id}/rechazar:
+    patch:
+      tags:
+      - Administración
+      summary: Rechazar cuenta y registrar motivo opcional
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                motivo: { type: string, maxLength: 300 }
+      responses:
+        '200':
+          description: Cuenta rechazada
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '403':
+          $ref: '#/components/responses/HTTP403'
+        '404':
+          $ref: '#/components/responses/HTTP404'
+  /notificaciones:
+    get:
+      tags:
+      - Notificaciones
+      summary: Listar notificaciones del usuario y su rol
+      responses:
+        '200':
+          description: Notificaciones y contador de no leídas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  no_leidas: { type: integer }
+                  datos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: integer, format: int64 }
+                        titulo: { type: string }
+                        mensaje: { type: string }
+                        tipo: { type: string }
+                        ruta: { type: string, nullable: true }
+                        creada_en: { type: string, format: date-time }
+                        leida_en: { type: string, format: date-time, nullable: true }
+        '401':
+          $ref: '#/components/responses/HTTP401'
+  /notificaciones/{id}/leer:
+    patch:
+      tags:
+      - Notificaciones
+      summary: Marcar una notificación como leída
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer, format: int64 }
+      responses:
+        '204': { description: Notificación marcada }
+        '401': { $ref: '#/components/responses/HTTP401' }
+  /notificaciones/leer-todas:
+    patch:
+      tags:
+      - Notificaciones
+      summary: Marcar todas las notificaciones visibles como leídas
+      responses:
+        '204': { description: Notificaciones marcadas }
+        '401': { $ref: '#/components/responses/HTTP401' }
+  /inteligencia-agricola/clima:
+    get:
+      tags:
+      - Inteligencia agrícola
+      summary: Consultar condiciones actuales y pronóstico meteorológico
+      parameters:
+      - name: lat
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -90
+          maximum: 90
+      - name: lon
+        in: query
+        required: true
+        schema:
+          type: number
+          minimum: -180
+          maximum: 180
+      responses:
+        '200':
+          description: Condiciones actuales y pronóstico de tres días
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+        '502':
+          description: Servicio meteorológico no disponible
+  /inteligencia-agricola/analizar-foto:
+    post:
+      tags:
+      - Inteligencia agrícola
+      summary: Analizar una fotografía agrícola mediante IA multimodal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [imagenBase64, tipoMime]
+              properties:
+                imagenBase64:
+                  type: string
+                  maxLength: 8000000
+                  description: Imagen codificada en Base64, con o sin prefijo data URI.
+                tipoMime:
+                  type: string
+                  enum: [image/jpeg, image/png, image/webp]
+      responses:
+        '200':
+          description: Observaciones orientativas generadas por IA
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analisis:
+                    type: string
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '422':
+          $ref: '#/components/responses/HTTP422'
+        '429':
+          $ref: '#/components/responses/HTTP429'
+        '502':
+          description: El proveedor de IA no pudo procesar la fotografía
+        '503':
+          description: Servicio de IA no configurado
+  /asistente/chat:
+    post:
+      tags:
+      - Asistente IA
+      summary: Consultar AgroCiclo AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mensaje]
+              properties:
+                mensaje: { type: string, maxLength: 1200 }
+                historial:
+                  type: array
+                  maxItems: 8
+                  items:
+                    type: object
+                    required: [rol, contenido]
+                    properties:
+                      rol: { type: string, enum: [user, assistant] }
+                      contenido: { type: string, maxLength: 1200 }
+      responses:
+        '200':
+          description: Respuesta generada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  respuesta: { type: string }
+        '401':
+          $ref: '#/components/responses/HTTP401'
+        '429':
+          $ref: '#/components/responses/HTTP429'
+        '503':
+          description: Asistente no configurado
+components:
+  securitySchemes:
+    sesionBearer:
+      type: http
+      scheme: bearer
+  schemas:
+    Login:
+      type: object
+      required:
+      - email
+      - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: admin@agrociclo.test
+        password:
+          type: string
+          format: password
+    Usuario:
+      type: object
+      required:
+      - id
+      - nombre
+      - email
+      - rol
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        nombre:
+          type: string
+        email:
+          type: string
+          format: email
+        rol:
+          type: string
+          enum:
+          - ADMIN
+          - SUPERVISOR
+          - OPERATIVO
+    Sesion:
+      type: object
+      required:
+      - token
+      - usuario
+      properties:
+        token:
+          type: string
+          description: Token opaco. Usar en el botón Authorize.
+        usuario:
+          $ref: '#/components/schemas/Usuario'
+    TerrenoEntrada:
+      type: object
+      required:
+      - nombre
+      - ubicacion
+      - area_ha
+      properties:
+        nombre:
+          type: string
+        ubicacion:
+          type: string
+        area_ha:
+          type: number
+          minimum: 0.001
+        imagen_url:
+          type: string
+          maxLength: 500
+          nullable: true
+        latitud:
+          type: number
+          minimum: -90
+          maximum: 90
+          nullable: true
+        longitud:
+          type: number
+          minimum: -180
+          maximum: 180
+          nullable: true
+    CultivoEntrada:
+      type: object
+      required:
+      - nombre
+      - dias_estimados
+      properties:
+        nombre:
+          type: string
+        dias_estimados:
+          type: integer
+          minimum: 1
+          maximum: 730
+    InsumoEntrada:
+      type: object
+      required:
+      - nombre
+      - categoria
+      - unidad
+      - stock_minimo
+      properties:
+        nombre:
+          type: string
+        categoria:
+          type: string
+          enum:
+          - FERTILIZANTE
+          - SEMILLA
+          - FITOSANITARIO
+          - OTRO
+        unidad:
+          type: string
+          enum:
+          - KG
+          - L
+          - UN
+        stock_minimo:
+          type: number
+          minimum: 0
+    CicloEntrada:
+      type: object
+      required:
+      - codigo
+      - terreno_id
+      - cultivo_id
+      - area_ha
+      - fecha_inicio
+      properties:
+        codigo:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        terreno_id:
+          type: integer
+          minimum: 1
+        cultivo_id:
+          type: integer
+          minimum: 1
+        area_ha:
+          type: number
+          minimum: 0.001
+        fecha_inicio:
+          type: string
+          format: date
+        notas:
+          type: string
+          maxLength: 500
+    Fecha:
+      type: object
+      required:
+      - fecha
+      properties:
+        fecha:
+          type: string
+          format: date
+    ActividadEntrada:
+      type: object
+      required:
+      - nombre
+      - programada_para
+      - obligatoria
+      properties:
+        nombre:
+          type: string
+        programada_para:
+          type: string
+          format: date
+        obligatoria:
+          type: boolean
+        nota:
+          type: string
+          maxLength: 500
+    CompletarActividad:
+      type: object
+      required:
+      - fecha
+      - costo
+      properties:
+        fecha:
+          type: string
+          format: date
+        costo:
+          type: number
+          minimum: 0
+    InsumoMovimiento:
+      type: object
+      required:
+      - folio
+      - fecha
+      - cantidad
+      - costo_unitario
+      properties:
+        folio:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        fecha:
+          type: string
+          format: date
+        cantidad:
+          type: number
+          minimum: 0.001
+        costo_unitario:
+          type: number
+          minimum: 0
+    ConsumoEntrada:
+      type: object
+      required:
+      - insumo_id
+      - folio
+      - fecha
+      - cantidad
+      - costo_unitario
+      properties:
+        insumo_id:
+          type: integer
+          minimum: 1
+        folio:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        fecha:
+          type: string
+          format: date
+        cantidad:
+          type: number
+          minimum: 0.001
+        costo_unitario:
+          type: number
+          minimum: 0
+    CosechaEntrada:
+      type: object
+      required:
+      - folio
+      - fecha
+      - kilogramos
+      properties:
+        folio:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        fecha:
+          type: string
+          format: date
+        kilogramos:
+          type: number
+          minimum: 0.001
+        nota:
+          type: string
+          maxLength: 500
+    Terreno:
+      type: object
+      required:
+      - nombre
+      - ubicacion
+      - area_ha
+      - id
+      properties:
+        nombre:
+          type: string
+        ubicacion:
+          type: string
+        area_ha:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+        imagen_url:
+          type: string
+          nullable: true
+        latitud:
+          type: string
+          nullable: true
+        longitud:
+          type: string
+          nullable: true
+        id:
+          type: integer
+          minimum: 1
+    Cultivo:
+      type: object
+      required:
+      - nombre
+      - dias_estimados
+      - id
+      properties:
+        nombre:
+          type: string
+        dias_estimados:
+          type: integer
+          minimum: 1
+          maximum: 730
+        id:
+          type: integer
+          minimum: 1
+    Insumo:
+      type: object
+      required:
+      - nombre
+      - categoria
+      - unidad
+      - stock_minimo
+      - id
+      - stock
+      properties:
+        nombre:
+          type: string
+        categoria:
+          type: string
+          enum:
+          - FERTILIZANTE
+          - SEMILLA
+          - FITOSANITARIO
+          - OTRO
+        unidad:
+          type: string
+          enum:
+          - KG
+          - L
+          - UN
+        stock_minimo:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+        id:
+          type: integer
+          minimum: 1
+        stock:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+    Ciclo:
+      type: object
+      required:
+      - codigo
+      - terreno_id
+      - cultivo_id
+      - area_ha
+      - fecha_inicio
+      - notas
+      - id
+      - estado
+      - fecha_siembra
+      - fecha_estimada
+      - fecha_cierre
+      properties:
+        codigo:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        terreno_id:
+          type: integer
+          minimum: 1
+        cultivo_id:
+          type: integer
+          minimum: 1
+        area_ha:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+        fecha_inicio:
+          type: string
+          format: date
+        notas:
+          type: string
+          maxLength: 500
+        id:
+          type: integer
+          minimum: 1
+        estado:
+          type: string
+          enum:
+          - PLANIFICADO
+          - SEMBRADO
+          - CERRADO
+        fecha_siembra:
+          type: string
+          format: date
+          nullable: true
+        fecha_estimada:
+          type: string
+          format: date
+          nullable: true
+        fecha_cierre:
+          type: string
+          format: date
+          nullable: true
+    Actividad:
+      type: object
+      required:
+      - nombre
+      - programada_para
+      - obligatoria
+      - nota
+      - id
+      - ciclo_id
+      - completada_en
+      - costo
+      properties:
+        nombre:
+          type: string
+        programada_para:
+          type: string
+          format: date
+        obligatoria:
+          type: boolean
+        nota:
+          type: string
+          maxLength: 500
+        id:
+          type: integer
+          minimum: 1
+        ciclo_id:
+          type: integer
+          minimum: 1
+        completada_en:
+          type: string
+          format: date
+          nullable: true
+        costo:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+    Cosecha:
+      type: object
+      required:
+      - folio
+      - fecha
+      - kilogramos
+      - nota
+      - id
+      - ciclo_id
+      properties:
+        folio:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        fecha:
+          type: string
+          format: date
+        kilogramos:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+        nota:
+          type: string
+          maxLength: 500
+        id:
+          type: integer
+          minimum: 1
+        ciclo_id:
+          type: integer
+          minimum: 1
+    Movimiento:
+      type: object
+      required:
+      - folio
+      - fecha
+      - cantidad
+      - costo_unitario
+      - id
+      - insumo_id
+      - ciclo_id
+      - tipo
+      properties:
+        folio:
+          type: string
+          minLength: 2
+          maxLength: 30
+          pattern: ^[A-Za-z0-9_-]+$
+        fecha:
+          type: string
+          format: date
+        cantidad:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+        costo_unitario:
+          type: string
+          description: Valor decimal exacto devuelto por PostgreSQL.
+        id:
+          type: integer
+          minimum: 1
+        insumo_id:
+          type: integer
+          minimum: 1
+        ciclo_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        tipo:
+          type: string
+          enum:
+          - ENTRADA
+          - CONSUMO
+    Error:
+      type: object
+      required:
+      - error
+      properties:
+        error:
+          type: object
+          required:
+          - codigo
+          - mensaje
+          properties:
+            codigo:
+              type: string
+            mensaje:
+              type: string
+            campos:
+              type: object
+              additionalProperties:
+                type: string
+    Alerta:
+      type: object
+      required:
+      - tipo
+      - origen_id
+      - ciclo_id
+      - insumo_id
+      - titulo
+      - referencia
+      - vence
+      - nivel
+      properties:
+        tipo:
+          type: string
+        origen_id:
+          type: integer
+          minimum: 1
+        ciclo_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        insumo_id:
+          type: integer
+          minimum: 1
+          nullable: true
+        titulo:
+          type: string
+        referencia:
+          type: string
+        vence:
+          type: string
+          format: date
+          nullable: true
+        nivel:
+          type: string
+    Indicadores:
+      type: object
+      required:
+      - resumen
+      - cultivos
+      properties:
+        resumen:
+          type: object
+          description: Conteos por estado, producción en kg, costo en USD y rendimiento
+            ponderado.
+        cultivos:
+          type: array
+          items:
+            type: object
+            description: Producción, costo y rendimiento agrupados por cultivo.
+    Auditoria:
+      type: object
+      required:
+      - id
+      - usuario_id
+      - usuario
+      - email
+      - fecha_hora
+      - accion
+      - entidad
+      - registro_id
+      - detalle
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        usuario_id:
+          type: integer
+          minimum: 1
+        usuario:
+          type: string
+        email:
+          type: string
+        fecha_hora:
+          type: string
+          format: date-time
+        accion:
+          type: string
+        entidad:
+          type: string
+        registro_id:
+          type: integer
+          minimum: 1
+        detalle:
+          type: object
+    CicloResumen:
+      allOf:
+      - $ref: '#/components/schemas/Ciclo'
+      - type: object
+        required:
+        - terreno
+        - cultivo
+        - kg_producidos
+        - costo_actividades
+        - costo_insumos
+        - costo_total
+        - obligatorias_pendientes
+        - rendimiento_kg_ha
+        properties:
+          terreno:
+            type: string
+          cultivo:
+            type: string
+          kg_producidos:
+            type: string
+            description: Valor decimal exacto devuelto por PostgreSQL.
+          costo_actividades:
+            type: string
+            description: Valor decimal exacto devuelto por PostgreSQL.
+          costo_insumos:
+            type: string
+            description: Valor decimal exacto devuelto por PostgreSQL.
+          costo_total:
+            type: string
+            description: Valor decimal exacto devuelto por PostgreSQL.
+          obligatorias_pendientes:
+            type: integer
+            minimum: 0
+          rendimiento_kg_ha:
+            type: string
+            description: Valor decimal exacto devuelto por PostgreSQL.
+            nullable: true
+    CicloDetalle:
+      allOf:
+      - $ref: '#/components/schemas/CicloResumen'
+      - type: object
+        required:
+        - actividades
+        - cosechas
+        - consumos
+        properties:
+          actividades:
+            type: array
+            items:
+              $ref: '#/components/schemas/Actividad'
+          cosechas:
+            type: array
+            items:
+              $ref: '#/components/schemas/Cosecha'
+          consumos:
+            type: array
+            items:
+              allOf:
+              - $ref: '#/components/schemas/Movimiento'
+              - type: object
+                required:
+                - insumo
+                - unidad
+                - costo
+                properties:
+                  insumo:
+                    type: string
+                  unidad:
+                    type: string
+                  costo:
+                    type: string
+                    description: Valor decimal exacto devuelto por PostgreSQL.
+    MovimientoRegistrado:
+      allOf:
+      - $ref: '#/components/schemas/Movimiento'
+      - type: object
+        required:
+        - stock
+        properties:
+          stock:
+            type: string
+            description: Valor decimal exacto devuelto por PostgreSQL.
+    PaginaCicloResumen:
+      type: object
+      required:
+      - datos
+      - pagina
+      - tam
+      - total
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CicloResumen'
+        pagina:
+          type: integer
+          minimum: 1
+        tam:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+    PaginaMovimiento:
+      type: object
+      required:
+      - datos
+      - pagina
+      - tam
+      - total
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movimiento'
+        pagina:
+          type: integer
+          minimum: 1
+        tam:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+    PaginaAuditoria:
+      type: object
+      required:
+      - datos
+      - pagina
+      - tam
+      - total
+      properties:
+        datos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Auditoria'
+        pagina:
+          type: integer
+          minimum: 1
+        tam:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+  responses:
+    HTTP400:
+      description: JSON inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP401:
+      description: Sesión requerida, inválida o credenciales incorrectas
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP403:
+      description: Rol insuficiente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP404:
+      description: Registro inexistente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP409:
+      description: Conflicto con estado, stock o folio
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP422:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP429:
+      description: Límite de intentos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    HTTP503:
+      description: Base de datos temporalmente indisponible
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

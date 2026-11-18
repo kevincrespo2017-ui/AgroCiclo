@@ -1,0 +1,9 @@
+{
+  "name": "AgroCiclo",
+  "short_name": "AgroCiclo",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7f3",
+  "theme_color": "#246044",
+  "description": "Gestión agrícola inteligente"
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "projects": {
+    "agrociclo": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "agro",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "browser": "src/main.ts",
+            "index": "index.html",
+            "tsConfig": "tsconfig.json",
+            "outputPath": {
+              "base": "dist/agrociclo",
+              "browser": "browser"
+            },
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public",
+                "output": "/"
+              },
+              {
+                "glob": "{accessibility,alert-circle,arrow-down-to-line,arrow-left,arrow-right,arrow-up-right,bar-chart-3,bell,bell-ring,book-open,boxes,camera,calendar-days,check,chevron-left,chevron-right,circle-check,clipboard-list,cloud-sun,coins,eye,eye-off,file-down,filter,history,inbox,layout-dashboard,leaf,loader-circle,lock,log-out,pause,play,square,map,map-pin,menu,package,pencil,plus,qr-code,refresh-cw,send,shield-check,sliders-horizontal,sparkles,split,sprout,trash-2,user-check,users,volume-2,volume-x,wheat,wifi-off,x}.svg",
+                "input": "node_modules/lucide-static/icons",
+                "output": "/iconos"
+              }
+            ],
+            "styles": [
+              "node_modules/@fontsource-variable/dm-sans/index.css",
+              "node_modules/@fontsource/instrument-serif/400.css",
+              "src/estilos.css"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "outputHashing": "all",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "620kB",
+                  "maximumError": "900kB"
+                }
+              ]
+            },
+            "development": {
+              "optimization": false,
+              "sourceMap": true,
+              "extractLicenses": false
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "options": {
+            "buildTarget": "agrociclo:build:development",
+            "port": 4200,
+            "allowedHosts": [
+              "andrescrespo.tail25799d.ts.net"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": false
+  }
+}

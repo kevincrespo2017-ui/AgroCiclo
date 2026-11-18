@@ -1,0 +1,132 @@
+<a class="enlace volver" routerLink="/ciclos"><agro-icon nombre="arrow-left" [tam]="17" /> Volver a ciclos</a>
+@if (exito()) { <agro-aviso [mensaje]="exito()" tipo="bien" /> }
+@if (error()) { <agro-aviso [mensaje]="error()" /> }
+@if (ciclo.cargando()) { <agro-cargando /> }
+@else if (ciclo.error()) {
+  <agro-aviso [mensaje]="ciclo.error()" [reintento]="true" (reintentar)="ciclo.cargar()" />
+} @else if (ciclo.datos(); as dato) {
+  <header class="encabezado-pagina">
+    <div><div class="titulo-con-estado"><h1>{{ dato.codigo }}</h1><agro-estado-ciclo [estado]="dato.estado" /></div>
+      <p>{{ dato.cultivo }} · {{ dato.terreno }} · {{ f.numero(dato.area_ha) }} ha</p></div>
+    <div class="acciones">
+      <button type="button" class="boton secundario" (click)="pdf(dato)" [disabled]="pdfActivo()">
+        <agro-icon nombre="arrow-down-to-line" [tam]="17" /> Ficha PDF
+      </button>
+      @if (gestor() && dato.estado === 'PLANIFICADO') {
+        <button type="button" class="boton secundario" (click)="editar(dato)"><agro-icon nombre="pencil" [tam]="16" /> Editar</button>
+        <button type="button" class="boton primario" (click)="sembrar(dato)"><agro-icon nombre="sprout" [tam]="17" /> Registrar siembra</button>
+        @if (admin() && !dato.actividades.length) {
+          <button type="button" class="icono-boton pequeno" title="Eliminar ciclo" aria-label="Eliminar ciclo"
+            (click)="borrarCiclo(dato)"><agro-icon nombre="trash-2" [tam]="16" /></button>
+        }
+      }
+      @if (gestor() && dato.estado === 'SEMBRADO') {
+        <button type="button" class="boton primario" (click)="cerrar(dato)"><agro-icon nombre="lock" [tam]="16" /> Cerrar ciclo</button>
+      }
+    </div>
+  </header>
+  <section class="tarjeta ficha-ciclo" aria-label="Indicadores del ciclo">
+    <dl class="resumen-ciclo">
+      <div><dt>Producción</dt><dd>{{ f.numero(dato.kg_producidos) }} kg</dd></div>
+      <div><dt>Rendimiento</dt><dd>{{ f.rendimiento(dato.rendimiento_kg_ha) }}</dd></div>
+      <div><dt>Costo total</dt><dd>{{ f.moneda(dato.costo_total) }}</dd></div>
+      <div><dt>Obligatorias pendientes</dt><dd>{{ dato.obligatorias_pendientes }}</dd></div>
+    </dl>
+    <dl class="fechas-ciclo">
+      <div><dt>Inicio</dt><dd>{{ f.fecha(dato.fecha_inicio) }}</dd></div>
+      <div><dt>Siembra</dt><dd>{{ f.fecha(dato.fecha_siembra) }}</dd></div>
+      <div><dt>Cosecha prevista</dt><dd>{{ f.fecha(dato.fecha_estimada) }}</dd></div>
+      <div><dt>Cierre</dt><dd>{{ f.fecha(dato.fecha_cierre) }}</dd></div>
+    </dl>
+    @if (dato.notas) { <p class="nota-ciclo">{{ dato.notas }}</p> }
+  </section>
+  <section class="tarjeta detalle-operacion">
+    <div class="tarjeta-titulo operacion-cabecera">
+      <div class="pestanas" role="group" aria-label="Registros del ciclo">
+        @for (pestana of pestanas; track pestana.clave) {
+          <button type="button" [class.activa]="vista() === pestana.clave" [attr.aria-pressed]="vista() === pestana.clave"
+            (click)="abrirVista(pestana.clave)">{{ pestana.texto }}</button>
+        }
+      </div>
+      @if (gestor() && vista() === 'actividades' && dato.estado !== 'CERRADO') {
+        <button type="button" class="boton primario" (click)="actividad(dato)"><agro-icon nombre="plus" [tam]="16" /> Actividad</button>
+      } @else if (vista() === 'insumos' && dato.estado === 'SEMBRADO') {
+        <button type="button" class="boton primario" [disabled]="!insumos().length" (click)="consumir(dato)">
+          <agro-icon nombre="plus" [tam]="16" /> Aplicar insumo
+        </button>
+      } @else if (vista() === 'cosechas' && dato.estado === 'SEMBRADO') {
+        <button type="button" class="boton primario" (click)="cosechar(dato)"><agro-icon nombre="plus" [tam]="16" /> Registrar cosecha</button>
+      }
+    </div>
+
+    @switch (vista()) {
+      @case ('actividades') {
+        @if (dato.actividades.length) {
+          <agro-tabla etiqueta="Actividades del ciclo" [columnas]="['Actividad', 'Programada', 'Estado', 'Ejecutada', 'Costo', 'Acciones']">
+            @for (registro of dato.actividades; track registro.id) {
+              <tr>
+                <th scope="row"><strong>{{ registro.nombre }}</strong>
+                  <small>{{ registro.obligatoria ? 'Obligatoria' : 'Opcional' }}@if (registro.nota) { · {{ registro.nota }} }</small>
+                </th>
+                <td>{{ f.fecha(registro.programada_para) }}</td>
+                <td><agro-estado [tono]="registro.completada_en ? 'sembrado' : 'planificado'">
+                  {{ registro.completada_en ? 'Completada' : 'Pendiente' }}</agro-estado></td>
+                <td>{{ f.fecha(registro.completada_en) }}</td><td>{{ f.moneda(registro.costo) }}</td>
+                <td>
+                  @if (dato.estado !== 'CERRADO' && !registro.completada_en) {
+                    <div class="acciones fila-acciones">
+                      <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Completar ' + registro.nombre"
+                        [title]="'Completar ' + registro.nombre" (click)="completar(dato, registro)"><agro-icon nombre="check" [tam]="16" /></button>
+                      @if (gestor()) {
+                        <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Editar ' + registro.nombre"
+                          [title]="'Editar ' + registro.nombre" (click)="actividad(dato, registro)"><agro-icon nombre="pencil" [tam]="16" /></button>
+                      }
+                      @if (admin()) {
+                        <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Eliminar ' + registro.nombre"
+                          [title]="'Eliminar ' + registro.nombre" (click)="borrarActividad(registro)"><agro-icon nombre="trash-2" [tam]="16" /></button>
+                      }
+                    </div>
+                  }
+                </td>
+              </tr>
+            }
+          </agro-tabla>
+        } @else { <agro-vacio titulo="Aún no hay actividades" /> }
+      }
+      @case ('insumos') {
+        @if (stock.error()) { <agro-aviso [mensaje]="stock.error()" [reintento]="true" (reintentar)="stock.cargar()" /> }
+        @if (dato.estado === 'SEMBRADO' && stock.datos() && !insumos().length) {
+          <agro-aviso tipo="advertencia" mensaje="Se requiere stock disponible para aplicar insumos." />
+        }
+        @if (dato.consumos.length) {
+          <agro-tabla etiqueta="Insumos aplicados" [columnas]="['Folio', 'Insumo', 'Fecha', 'Cantidad', 'Costo unitario', 'Costo aplicado']">
+            @for (consumo of dato.consumos; track consumo.id) {
+              <tr><th scope="row">{{ consumo.folio }}</th><td>{{ consumo.insumo }}</td><td>{{ f.fecha(consumo.fecha) }}</td>
+                <td>{{ f.numero(consumo.cantidad) }} {{ f.unidades[consumo.unidad] }}</td>
+                <td>{{ f.moneda(consumo.costo_unitario) }}</td><td>{{ f.moneda(consumo.costo) }}</td></tr>
+            }
+          </agro-tabla>
+        } @else { <agro-vacio titulo="Aún no hay aplicaciones de insumos" /> }
+      }
+      @case ('cosechas') {
+        @if (dato.estado === 'PLANIFICADO') {
+          <agro-aviso tipo="advertencia" mensaje="Registra la siembra antes de ingresar una cosecha." />
+        }
+        @if (dato.cosechas.length) {
+          <agro-tabla etiqueta="Cosechas del ciclo" [columnas]="['Folio', 'Fecha', 'Producción', 'Observaciones', 'Acciones']">
+            @for (registro of dato.cosechas; track registro.id) {
+              <tr><th scope="row">{{ registro.folio }}</th><td>{{ f.fecha(registro.fecha) }}</td>
+                <td>{{ f.numero(registro.kilogramos) }} kg</td><td>{{ registro.nota || '—' }}</td>
+                <td>@if (admin() && dato.estado === 'SEMBRADO') {
+                  <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Retirar cosecha ' + registro.folio"
+                    [title]="'Retirar cosecha ' + registro.folio" (click)="retirarCosecha(registro)"><agro-icon nombre="trash-2" [tam]="16" /></button>
+                }</td>
+              </tr>
+            }
+          </agro-tabla>
+        } @else { <agro-vacio titulo="Aún no hay cosechas registradas" /> }
+      }
+    }
+  </section>
+}
+@if (modal(); as config) { <agro-formulario [config]="config" (cerrar)="modal.set(null)" /> }

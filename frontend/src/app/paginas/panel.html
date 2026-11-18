@@ -1,0 +1,79 @@
+<section class="portada-panel">
+  <div class="portada-texto">
+    <h1>Panel de producción</h1>
+    @if (indicadores.datos(); as datos) {
+      <p>{{ datos.resumen.sembrados }} ciclos sembrados · {{ datos.resumen.planificados }} planificados</p>
+    } @else { <p>Gestiona tus ciclos y cosechas.</p> }
+    <a class="boton claro" routerLink="/ciclos">Ver ciclos <agro-icon nombre="arrow-right" [tam]="17" /></a>
+  </div>
+</section>
+@if (indicadores.cargando()) { <agro-cargando /> }
+@else if (indicadores.error()) {
+  <agro-aviso [mensaje]="indicadores.error()" [reintento]="true" (reintentar)="indicadores.cargar()" />
+} @else {
+  <div class="indicadores">
+    @for (dato of metricas(); track dato.titulo) {
+      <article class="indicador">
+        <div [class]="'indicador-icono ' + dato.tono"><agro-icon [nombre]="dato.icono" [tam]="20" /></div>
+        <div><h2>{{ dato.titulo }}</h2><strong>{{ dato.valor }}</strong>@if (dato.nota) { <p>{{ dato.nota }}</p> }</div>
+      </article>
+    }
+  </div>
+}
+<div class="tablero-grilla">
+  <section class="tarjeta bloque-tablero">
+    <header class="tarjeta-titulo">
+      <div><h2>Producción por cultivo</h2><p>Cosecha registrada en kilogramos</p></div>
+      <a class="enlace" routerLink="/productividad">Comparar ciclos <agro-icon nombre="arrow-right" [tam]="15" /></a>
+    </header>
+    @if (indicadores.cargando()) { <agro-cargando /> }
+    @else if (!indicadores.error()) {
+      @if (productivos().length) {
+        <ul class="barras-cultivo">
+          @for (cultivo of productivos(); track cultivo.cultivo_id; let i = $index) {
+            <li><div><strong>{{ cultivo.cultivo }}</strong><span>{{ f.numero(cultivo.produccion_kg) }} kg</span></div>
+              <div class="barra-fondo" aria-hidden="true"><div [class]="'barra-valor barra-' + (i % 3)" [style.width.%]="ancho(cultivo.produccion_kg)"></div></div>
+            </li>
+          }
+        </ul>
+      } @else { <agro-vacio titulo="Aún no hay producción registrada" /> }
+    }
+  </section>
+  <section class="tarjeta bloque-tablero" id="alertas">
+    <header class="tarjeta-titulo">
+      <div><h2>Alertas operativas</h2><p>Tareas, cosechas previstas e inventario</p></div>
+      @if (alertas.datos(); as datos) { <span class="conteo" [attr.aria-label]="datos.length + ' alertas'">{{ datos.length }}</span> }
+    </header>
+    @if (alertas.cargando()) { <agro-cargando /> }
+    @else if (alertas.error()) { <agro-aviso [mensaje]="alertas.error()" [reintento]="true" (reintentar)="alertas.cargar()" /> }
+    @else {
+      <ul class="lista-alertas">
+        @for (alerta of alertas.datos(); track alerta.tipo + alerta.origen_id) {
+          <li><a [routerLink]="alerta.ciclo_id ? ['/ciclos', alerta.ciclo_id] : ['/insumos']"
+            [queryParams]="alerta.tipo === 'COSECHA' ? {vista: 'cosechas'} : alerta.insumo_id ? {inventario: alerta.insumo_id} : null">
+            <span [class]="'alerta-icono ' + alerta.nivel.toLowerCase()">
+              <agro-icon [nombre]="alerta.tipo === 'INVENTARIO' ? 'package' : alerta.tipo === 'COSECHA' ? 'wheat' : 'alert-circle'" [tam]="17" />
+            </span>
+            <span class="alerta-datos"><strong>{{ alerta.titulo }}</strong>
+              <small>{{ alerta.referencia }}@if (alerta.vence) { · {{ f.fecha(alerta.vence) }} }</small></span>
+            <agro-estado [tono]="alerta.nivel.toLowerCase()">{{ niveles[alerta.nivel] }}</agro-estado>
+          </a></li>
+        } @empty { <li><agro-vacio titulo="Sin alertas pendientes" /></li> }
+      </ul>
+    }
+  </section>
+</div>
+<section class="tarjeta recientes">
+  <header class="tarjeta-titulo"><div><h2><agro-icon nombre="calendar-days" [tam]="19" /> Ciclos recientes</h2></div>
+    <a class="enlace" routerLink="/ciclos">Ver todos <agro-icon nombre="arrow-right" [tam]="15" /></a>
+  </header>
+  @if (recientes.cargando()) { <agro-cargando /> }
+  @else if (recientes.error()) { <agro-aviso [mensaje]="recientes.error()" [reintento]="true" (reintentar)="recientes.cargar()" /> }
+  @else if (recientes.datos(); as pagina) { <agro-tabla-ciclos [ciclos]="pagina.datos" /> }
+</section>
+
+<nav class="campo-galeria" aria-label="Explora tu producción">
+<a routerLink="/catalogos"><img src="campo.webp" alt="" loading="lazy"><span><strong>Tu territorio</strong><small>Terrenos y cultivos, conectados.</small></span></a>
+<a routerLink="/ciclos"><img src="campo.webp" alt="" loading="lazy" style="object-position:20%"><span><strong>De semilla a cosecha</strong><small>Acompaña cada etapa de tu ciclo.</small></span></a>
+<a routerLink="/productividad"><img src="campo.webp" alt="" loading="lazy" style="object-position:80%"><span><strong>Decisiones con datos</strong><small>Compara resultados y costos reales.</small></span></a>
+</nav>

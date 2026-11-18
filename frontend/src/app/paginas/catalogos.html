@@ -1,0 +1,129 @@
+<header class="encabezado-pagina">
+  <div>
+    <h1>{{ inventario ? 'Inventario de insumos' : 'Terrenos y cultivos' }}</h1>
+    <p>{{ inventario ? 'Consulta existencias, movimientos y umbrales de reposición.' : 'Administra las parcelas y especies que se usan al planificar.' }}</p>
+  </div>
+  @if (gestor()) {
+    <button type="button" class="boton primario" (click)="crear()"><agro-icon nombre="plus" [tam]="17" /> Nuevo {{ configuracion().singular }}</button>
+  }
+</header>
+@if (exito()) { <agro-aviso [mensaje]="exito()" tipo="bien" /> }
+@if (error()) { <agro-aviso [mensaje]="error()" /> }
+<section class="tarjeta">
+  @if (!inventario) {
+    <div class="tarjeta-titulo"><div class="pestanas" role="group" aria-label="Catálogos">
+      <button type="button" [class.activa]="tipo() === 'terrenos'" [attr.aria-pressed]="tipo() === 'terrenos'"
+        (click)="cambiar('terrenos')">Terrenos</button>
+      <button type="button" [class.activa]="tipo() === 'cultivos'" [attr.aria-pressed]="tipo() === 'cultivos'"
+        (click)="cambiar('cultivos')">Cultivos</button>
+    </div></div>
+  }
+  @if (recurso.cargando()) { <agro-cargando /> }
+  @else if (recurso.error()) { <agro-aviso [mensaje]="recurso.error()" [reintento]="true" (reintentar)="recurso.cargar()" /> }
+  @else if (filas().length) {
+    @if (tipo() === 'terrenos') {
+      <div class="terrenos-grid">
+        @for (fila of filas(); track fila.registro.id) {
+          @if (fila.terreno; as terreno) {
+            <article class="terreno-card">
+              <div class="terreno-foto">
+                <img [src]="urlImagen(terreno.imagen_url)" [alt]="'Fotografía del terreno ' + terreno.nombre"
+                  loading="lazy" (error)="$any($event.target).src='/campo.webp'">
+                <span class="terreno-etiqueta"><agro-icon nombre="map-pin" [tam]="13"/> Parcela agrícola</span>
+                @if (gestor()) {
+                  <label class="terreno-subir-foto" [attr.aria-label]="'Cambiar fotografía de ' + terreno.nombre">
+                    <agro-icon nombre="camera" [tam]="15"/> Cambiar foto
+                    <input type="file" accept="image/jpeg,image/png,image/webp" (change)="subirImagen(terreno,$event)">
+                  </label>
+                }
+              </div>
+              <div class="terreno-card-cuerpo">
+                <div class="terreno-card-titulo">
+                  <div><span class="terreno-kicker">TERRENO REGISTRADO</span><h2>{{terreno.nombre}}</h2></div>
+                  <span class="terreno-superficie"><strong>{{f.numero(terreno.area_ha)}}</strong><small>hectáreas</small></span>
+                </div>
+                <p class="terreno-ubicacion"><agro-icon nombre="map-pin" [tam]="16"/>{{terreno.ubicacion}}</p>
+                <div class="terreno-card-pie">
+                  <button type="button" class="boton secundario" (click)="mostrarQr(terreno)">
+                    <agro-icon nombre="qr-code" [tam]="16"/> Código QR
+                  </button>
+                  @if (gestor() || admin()) {
+                    <div class="acciones">
+                      @if (gestor()) {
+                        <button type="button" class="icono-boton" [attr.aria-label]="'Editar ' + terreno.nombre"
+                          [title]="'Editar ' + terreno.nombre" (click)="crear(terreno)"><agro-icon nombre="pencil" [tam]="16"/></button>
+                      }
+                      @if (admin()) {
+                        <button type="button" class="icono-boton" [attr.aria-label]="'Eliminar ' + terreno.nombre"
+                          [title]="'Eliminar ' + terreno.nombre" (click)="borrar(terreno)"><agro-icon nombre="trash-2" [tam]="16"/></button>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </article>
+          }
+        }
+      </div>
+    } @else {
+      <agro-tabla [columnas]="columnas()" [etiqueta]="inventario ? 'Existencias de insumos' : 'Catálogo de ' + tipo()">
+        @for (fila of filas(); track fila.registro.id) {
+          <tr>
+            <th scope="row">{{ fila.registro.nombre }}</th>
+            @for (dato of fila.otros; track $index) {
+              <td>{{ dato }}@if (fila.bajo && $index === 1) { <small><agro-estado tono="bajo_stock">Stock bajo</agro-estado></small> }</td>
+            }
+            @if (gestor() || inventario) {
+              <td><div class="acciones fila-acciones">
+                @if (fila.insumo; as insumo) {
+                  <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Historial de ' + insumo.nombre"
+                    [title]="'Historial de ' + insumo.nombre" (click)="abrirHistorial(insumo)"><agro-icon nombre="history" [tam]="16" /></button>
+                  @if (gestor()) {
+                    <button type="button" class="boton secundario pequeno" (click)="entrada(insumo)"><agro-icon nombre="boxes" [tam]="16" /> Entrada</button>
+                  }
+                }
+                @if (gestor()) {
+                  <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Editar ' + fila.registro.nombre"
+                    [title]="'Editar ' + fila.registro.nombre" (click)="crear(fila.registro)"><agro-icon nombre="pencil" [tam]="16" /></button>
+                }
+                @if (admin()) {
+                  <button type="button" class="icono-boton pequeno" [attr.aria-label]="'Eliminar ' + fila.registro.nombre"
+                    [title]="'Eliminar ' + fila.registro.nombre" (click)="borrar(fila.registro)"><agro-icon nombre="trash-2" [tam]="16" /></button>
+                }
+              </div></td>
+            }
+          </tr>
+        }
+      </agro-tabla>
+    }
+  } @else { <agro-vacio [titulo]="'Aún no hay ' + tipo() + ' registrados'" /> }
+</section>
+@if (modal(); as config) { <agro-formulario [config]="config" (cerrar)="modal.set(null)" /> }
+@if (historial(); as insumo) {
+  <agro-dialogo [titulo]="'Movimientos de ' + insumo.nombre"
+    [descripcion]="'Disponible ' + f.numero(insumo.stock) + ' ' + f.unidades[insumo.unidad]" (cerrar)="cerrarHistorial()">
+    @if (movimientos.cargando()) { <agro-cargando /> }
+    @else if (movimientos.error()) { <agro-aviso [mensaje]="movimientos.error()" [reintento]="true" (reintentar)="movimientos.cargar()" /> }
+    @else if (movimientos.datos(); as pagina) {
+      @if (pagina.total) {
+        <agro-tabla etiqueta="Movimientos del insumo" [columnas]="['Folio','Tipo','Fecha','Cantidad','Costo unitario','Ciclo']">
+          @for (movimiento of pagina.datos; track movimiento.id) {
+            <tr><th scope="row">{{ movimiento.folio }}</th>
+              <td>{{ movimiento.tipo === 'ENTRADA' ? 'Entrada' : 'Aplicación' }}</td><td>{{ f.fecha(movimiento.fecha) }}</td>
+              <td>{{ f.numero(movimiento.cantidad) }} {{ f.unidades[insumo.unidad] }}</td>
+              <td>{{ f.moneda(movimiento.costo_unitario) }}</td><td>{{ movimiento.ciclo || '—' }}</td></tr>
+          }
+        </agro-tabla>
+        <agro-paginador [datos]="pagina" (cambiar)="paginaHistorial($event)" />
+      } @else { <agro-vacio titulo="No hay movimientos registrados" /> }
+    }
+  </agro-dialogo>
+}
+
+@if (qrTerreno(); as terreno) {
+  <agro-dialogo [titulo]="'Ubicación de ' + terreno.nombre" descripcion="Escanea el código QR para abrir la ubicación del terreno en Google Maps." (cerrar)="qrTerreno.set(null)">
+    <div class="terreno-qr"><img [src]="qrUrl(terreno)" [alt]="'Código QR de ubicación de ' + terreno.nombre"><strong>{{terreno.nombre}}</strong><span>{{terreno.ubicacion}}</span>
+      <a class="boton primario" [href]="mapaUrl(terreno)" target="_blank" rel="noopener"><agro-icon nombre="map-pin"/> Abrir ubicación</a>
+    </div>
+  </agro-dialogo>
+}

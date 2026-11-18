@@ -1,0 +1,39 @@
+<header class="encabezado-pagina"><div><h1>Productividad</h1><p>Compara el rendimiento, la producción y los costos de tus ciclos.</p></div></header>
+@if (error()) { <agro-aviso [mensaje]="error()" /> }
+
+<section class="tarjeta comparacion">
+  <header class="tarjeta-titulo">
+    <div><h2><agro-icon nombre="split" [tam]="19" /> Comparación de ciclos</h2>
+      <p>Selecciona dos ciclos en la tabla. La primera selección es la referencia.</p></div>
+    @if (seleccion().length) { <button type="button" class="boton secundario pequeno" (click)="seleccion.set([])">Quitar selección</button> }
+  </header>
+  @if (referencia(); as base) {
+    @let otro = comparado();
+    <agro-tabla etiqueta="Comparación de productividad" [columnas]="['Indicador', base.codigo, otro?.codigo ?? 'Segundo ciclo']">
+      <tr><th scope="row">Cultivo y terreno</th>
+        <td><a class="enlace" [routerLink]="['/ciclos', base.id]">{{ base.cultivo }} · {{ base.terreno }}</a></td>
+        <td>@if (otro) { <a class="enlace" [routerLink]="['/ciclos', otro.id]">{{ otro.cultivo }} · {{ otro.terreno }}</a> } @else { — }</td>
+      </tr>
+      @for (metrica of metricas; track metrica.texto) {
+        <tr><th scope="row">{{ metrica.texto }}</th><td>{{ metrica.valor(base) }}</td><td>{{ otro ? metrica.valor(otro) : '—' }}</td></tr>
+      }
+    </agro-tabla>
+    @if (otro && variacion()) {
+      <p class="comparacion-delta"><agro-icon nombre="bar-chart-3" /> Rendimiento de {{ otro.codigo }} frente a {{ base.codigo }} <strong>{{ variacion() }}</strong></p>
+    }
+  } @else { <agro-vacio titulo="Aún no has seleccionado ciclos" /> }
+</section>
+<section class="tarjeta">
+  <header class="tarjeta-titulo"><div><h2>Registros por ciclo</h2><p>Rendimiento en kg/ha. Descarga la ficha PDF de cada ciclo.</p></div></header>
+  @if (terrenos.error()) { <agro-aviso [mensaje]="terrenos.error()" [reintento]="true" (reintentar)="terrenos.cargar()" /> }
+  @if (cultivos.error()) { <agro-aviso [mensaje]="cultivos.error()" [reintento]="true" (reintentar)="cultivos.cargar()" /> }
+  <agro-filtros [filtros]="borrador()" (filtrosChange)="borrador.set($event)" [terrenos]="terrenos.datos() ?? []"
+    [cultivos]="cultivos.datos() ?? []" (aplicar)="aplicar()" (limpiar)="limpiar()" />
+  @if (reporte.cargando()) { <agro-cargando /> }
+  @else if (reporte.error()) { <agro-aviso [mensaje]="reporte.error()" [reintento]="true" (reintentar)="reporte.cargar()" /> }
+  @else if (reporte.datos(); as pagina) {
+    <agro-tabla-ciclos [ciclos]="pagina.datos" [comparar]="true" [ficha]="true" [pdfActivo]="pdfActivo()"
+      [seleccion]="ids()" (descargar)="descargar($event)" (alternar)="elegir($event)" />
+    <agro-paginador [datos]="pagina" (cambiar)="listar($event)" />
+  }
+</section>

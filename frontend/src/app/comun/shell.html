@@ -1,0 +1,86 @@
+@if (acceso.usuario(); as usuario) {
+  <div class="aplicacion">
+    <a class="salto" href="#contenido">Ir al contenido</a>
+    <aside class="lateral" [class.lateral-abierto]="menu()" id="menu-principal">
+      <a routerLink="/" class="marca-enlace" (click)="menu.set(false)"><agro-marca /></a>
+      <nav aria-label="Navegación principal">
+        @for (seccion of secciones; track seccion.nombre) {
+          <div class="lateral-seccion">
+            <p>{{ texto(seccion.nombre) }}</p>
+            @for (enlace of seccion.rutas; track enlace.ruta) {
+              @if (!enlace.admin || usuario.rol === 'ADMIN') {
+                <a [routerLink]="enlace.ruta" routerLinkActive="active" [routerLinkActiveOptions]="{exact: enlace.ruta === '/'}"
+                  ariaCurrentWhenActive="page" (click)="menu.set(false)"><agro-icon [nombre]="enlace.icono" />{{ texto(enlace.texto) }}</a>
+              }
+            }
+          </div>
+        }
+      </nav>
+      <div class="lateral-pie">
+        <span class="avatar" aria-hidden="true">{{ usuario.rol === 'ADMIN' ? 'AD' : usuario.rol === 'SUPERVISOR' ? 'SU' : 'OP' }}</span>
+        <div><strong>{{ usuario.nombre }}</strong><small>{{ usuario.rol === 'ADMIN' ? 'Administrador' : usuario.rol === 'SUPERVISOR' ? 'Supervisor' : 'Operativo' }}</small></div>
+        <button class="icono-boton" type="button" title="Cerrar sesión" aria-label="Cerrar sesión"
+          (click)="cerrarSesion()" [disabled]="saliendo()"><agro-icon nombre="log-out" [tam]="17" /></button>
+      </div>
+    </aside>
+    @if (menu()) { <button type="button" class="velo-menu" aria-label="Cerrar menú" (click)="menu.set(false)"></button> }
+    <div class="aplicacion-cuerpo">
+      <header class="barra-superior">
+        <div class="ruta-breve">
+          <button type="button" class="icono-boton boton-menu" aria-label="Menú" [attr.aria-expanded]="menu()"
+            aria-controls="menu-principal" (click)="menu.set(!menu())"><agro-icon nombre="menu" [tam]="20" /></button>
+          <span class="ruta-raiz">AgroCiclo</span><agro-icon nombre="chevron-right" [tam]="14" class="ruta-raiz" />
+          <strong>{{ texto(titulo()) }}</strong>
+        </div>
+        <div class="barra-acciones">
+          <span class="barra-fecha"><agro-icon nombre="calendar-days" [tam]="16" />{{ fecha() }}</span>
+          @if (!offline.conectado()) {
+            <span class="estado-conexion sin-red"><agro-icon nombre="wifi-off" [tam]="14"/> Sin conexión</span>
+          } @else if (offline.pendientes() > 0) {
+            <span class="estado-conexion pendientes-offline"><agro-icon nombre="refresh-cw" [tam]="14"/> {{offline.pendientes()}} pendientes</span>
+          }
+          <div class="ancla-popover">
+            <button type="button" class="boton-notificaciones" [class.activo]="notificacionesAbiertas()"
+              [attr.aria-label]="texto('Notificaciones')" title="Notificaciones" aria-haspopup="dialog" [attr.aria-expanded]="notificacionesAbiertas()" (click)="abrirNotificaciones()">
+              <agro-icon nombre="bell" [tam]="18"/><span>{{texto('Notificaciones')}}</span>
+              @if (noLeidas() > 0) {<span class="notificacion-contador" aria-label="Notificaciones sin leer">{{noLeidas()>99?'99+':noLeidas()}}</span>}
+            </button>
+            @if (notificacionesAbiertas()) {
+              <section class="popover-notificaciones" role="dialog" aria-label="Centro de notificaciones">
+                <header class="popover-cabecera"><div><h2>{{texto('Notificaciones')}}</h2><p>{{noLeidas()}} sin leer</p></div>
+                  <button class="icono-boton pequeno" type="button" aria-label="Cerrar notificaciones" (click)="cerrarNotificaciones()"><agro-icon nombre="x" [tam]="16"/></button></header>
+                @if (noLeidas() > 0) {<button type="button" class="marcar-todas" (click)="marcarTodasLeidas()">{{texto('Marcar todas como leídas')}}</button>}
+                @if (cargandoNotificaciones()) {<div class="popover-vacio">Cargando notificaciones…</div>}
+                @else if (notificaciones().length) {<ul class="notificaciones-lista">
+                  @for (n of notificaciones(); track n.id) {<li><button type="button" class="notificacion-item" [class.no-leida]="!n.leida_en" (click)="marcarNotificacion(n)">
+                    <span class="notificacion-punto"><agro-icon [nombre]="n.tipo==='CUENTA'?'user-check':n.tipo==='USUARIO'?'users':'bell'" [tam]="17"/></span>
+                    <span class="notificacion-contenido"><strong>{{n.titulo}}</strong><span>{{n.mensaje}}</span><small>{{fechaNotificacion(n.creada_en)}}</small></span>
+                    @if (!n.leida_en) {<i aria-label="Sin leer"></i>}
+                  </button></li>}
+                </ul>}@else{<div class="popover-vacio"><agro-icon nombre="bell-ring" [tam]="25"/><strong>{{texto('Sin notificaciones')}}</strong><span>Te avisaremos cuando haya novedades importantes.</span></div>}
+              </section>
+            }
+          </div>
+        </div>
+      </header>
+      <main class="contenido" id="contenido" tabindex="-1">
+        @if (error()) { <agro-aviso [mensaje]="error()" /> }
+        <router-outlet />
+      </main>
+    </div>
+    <agro-accesibilidad-publica/>
+  </div>
+  <button class="boton-agro-ai" type="button" [attr.aria-expanded]="chatAbierto()" (click)="chatAbierto.set(!chatAbierto())"><agro-icon nombre="sparkles" [tam]="19"/><span>AgroCiclo AI</span></button>
+  @if (chatAbierto()) {
+    <section class="ventana-agro-ai" role="dialog" aria-label="Asistente AgroCiclo AI">
+      <header><span class="ai-avatar"><agro-icon nombre="sprout" [tam]="19"/></span><div><strong>AgroCiclo AI</strong><small>Asistente agrícola</small></div><button type="button" class="icono-boton pequeno" aria-label="Cerrar asistente" (click)="chatAbierto.set(false)"><agro-icon nombre="x" [tam]="16"/></button></header>
+      <div class="ai-mensajes" aria-live="polite">
+        @for (m of chatMensajes(); track $index) {<div [class]="'ai-mensaje '+m.rol">{{m.contenido}}</div>}
+        @if (chatEnviando()) {<div class="ai-escribiendo">AgroCiclo AI está pensando…</div>}
+        @if (chatError()) {<div class="ai-error">{{chatError()}}</div>}
+      </div>
+      <form class="ai-formulario" (submit)="enviarAsistente($event)"><input aria-label="Escribe tu consulta" [value]="chatMensaje()" (input)="leerMensaje($event)" placeholder="Pregunta sobre cultivos, suelo, riego…" maxlength="1200" [disabled]="chatEnviando()"/><button type="submit" class="boton primario" aria-label="Enviar mensaje" [disabled]="chatEnviando()||!chatMensaje().trim()"><agro-icon nombre="send" [tam]="17"/></button></form>
+      <p class="ai-nota">Las respuestas son orientativas y pueden requerir validación técnica.</p>
+    </section>
+  }
+}
